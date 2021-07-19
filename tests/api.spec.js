@@ -50,7 +50,7 @@ describe("Anime API", () => {
 
   it("Test first (anime) films page and should get current data from page", () => {
     //const data = await get_data("https://animang.ru/filmy.page/1");
-    expect(2).toBe(2);
+    expect(1).toBe(2);
     //expect(data).toBe(JSON.parse(...test_film_page_results));
   });
 });
