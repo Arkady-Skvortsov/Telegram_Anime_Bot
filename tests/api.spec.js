@@ -45,7 +45,7 @@ describe("Anime API", () => {
       }
     });
 
-    await get_dta("https://animang.ru/filmy.page/1");
+    await get_data("https://animang.ru/filmy.page/1");
   });
 
   it("Test first (anime) films page and should get current data from page", () => {
