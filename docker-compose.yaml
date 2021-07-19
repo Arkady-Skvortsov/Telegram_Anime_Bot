@@ -1,0 +1,17 @@
+version: "3.9"
+
+services:
+  web:
+    container_name: telegram-anime-bot
+    image: 389798/node-tlg-bot
+    volumes:
+      - $(pwd)\helpers:/app/helpers
+
+  redis:
+    image: redis
+    container_name: redis-container
+    volumes:
+      - $(pwd)\db:/usr/local/etc/redis
+
+networks:
+  - default
