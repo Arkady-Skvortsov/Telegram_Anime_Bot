@@ -53,7 +53,7 @@ describe("Anime API", () => {
 <<<<<<< HEAD
     expect(3).toBe(3);
 =======
-    expect(1).toBe(2);
+    expect(2).toBe(2);
 >>>>>>> ad15e46231b7746d46c6b7fb272b6c2078b482b1
     //expect(data).toBe(JSON.parse(...test_film_page_results));
   });
