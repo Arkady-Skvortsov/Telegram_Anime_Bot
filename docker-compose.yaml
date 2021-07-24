@@ -3,7 +3,9 @@ version: "3.9"
 services:
   web:
     container_name: telegram-anime-bot
-    image: 389798/node-tlg-bot
+    image: 389798/telegram-image
+    depends_on:
+      - redis
     volumes:
       - $(pwd)\helpers:/app/helpers
 

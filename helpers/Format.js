@@ -1,13 +1,10 @@
-const axios = require("axios");
-const cheerio = require("cheerio");
-
 module.exports = class Format {
   constructor(string) {
     this.string = string;
   }
 
   anime_types() {
-    return this.string.replace(/\^[А-Я]/gi, ", ");
+    return this.string.replace(/\^[А-Я]+/g, " ");
   }
 
   links_anime_digit() {

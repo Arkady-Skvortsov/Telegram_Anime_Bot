@@ -1,20 +1,25 @@
-const puppeteer = require("puppeteer");
 const axios = require("axios");
 const cheerio = require("cheerio");
-const redis = require("../db/db");
+// const redis = require("../db/db");
 const Format = require("./Format");
 
-class Category {
-  constructor(categories, current_category) {
-    this.categories = categories;
-    this.current_category = current_category;
+class Address {
+  constructor() {
+    this.default_path = "https://animang.ru";
+  }
+}
+
+class Podborki extends Address {
+  constructor() {
+    super();
+    this.own_path = "podborki";
   }
 
-  async get_categories() {
+  async get_mix_groups() {
     try {
       let hrefs = [];
 
-      const response = await axios.get(this.categories);
+      const response = await axios.get(`${this.default_path}/${this.own_path}`);
 
       const $ = cheerio.load(response.data);
 
@@ -24,19 +29,72 @@ class Category {
           hrefs.push($(elem).attr("href"));
         });
 
-      await new API(hrefs, 1).get_page(hrefs);
+      console.log(...hrefs);
+      //await new API(hrefs, 1).get_page(hrefs);
     } catch (e) {
       console.log(e);
     }
   }
 }
 
-// const category = new Category(
-//   "https://animang.ru/podborki",
-//   "https://animang.ru/razdel/anime-o-puteshestviyax-vo-vremeni"
-// );
+class Categories extends Address {
+  constructor() {
+    super();
+  }
 
-// category.get_categories();
+  async get_categories() {
+    try {
+      let category_hrefs = [];
+
+      const response = await axios.get(this.default_path);
+
+      const $ = cheerio.load(response.data);
+
+      $("div.hed-link")
+        .find("li")
+        .each((i, elem) => {
+          const category_obj = {
+            name: $(elem).children("a").text(),
+            href: $(elem).children("a").attr("href"),
+          };
+
+          category_hrefs.push(category_obj);
+
+          category_hrefs = category_hrefs.filter((el) => el.href !== undefined);
+        });
+
+      return category_hrefs;
+    } catch (e) {
+      console.log(e);
+    }
+  }
+}
+
+class Janru extends Address {
+  constructor() {
+    super();
+  }
+
+  async get_janru() {
+    try {
+      let janres;
+
+      const response = await axios.get(this.default_path);
+
+      const $ = cheerio.load(response.data);
+
+      $("ul.janru")
+        .children("li")
+        .each((i, elem) => {
+          janres.push($(elem).children("a").attr("href"));
+        });
+
+      return janres;
+    } catch (e) {
+      console.log(e);
+    }
+  }
+}
 
 class Search {
   constructor(path) {
@@ -69,8 +127,9 @@ class Search {
 
 // search.search_data();
 
-class API {
+class API extends Address {
   constructor(path, page_count) {
+    super();
     this.path = path;
     this.page_count = page_count;
   }
@@ -79,19 +138,9 @@ class API {
     try {
       const hrefs = [];
 
-      // $("div.art-pager").each((i, elem) => {
-      //   this.page_count = Math.max(...$(elem).text().match(/\d+/g));
-
-      //   if(this.page_count > 1) {
-      //     link_pages = `https://animang.ru/${this.path}/page/${y}`;
-      //   }
-
-      //   link_pages = `https://animang.ru/${this.path}`;
-      // });
-
       for (let y = 1; y <= this.page_count; y++) {
         const content = await axios.get(
-          `https://animang.ru/${this.path}/page/${y}`
+          `${this.default_path}/${this.path}/page/${y}`
         );
 
         const $ = cheerio.load(content.data);
@@ -111,28 +160,20 @@ class API {
 
   async subscribe() {
     try {
-      let hrefs;
-
-      const sub_anime = await axios.get(`https://animang.ru/${this.path}`);
-
-      const $ = cheerio.load(sub_anime);
-
-      $("div.post-home").each((i, elem) => {
-        const element = $(elem).children("a").attr("href");
-
-        hrefs.push(element);
-      });
-
-      redis.set("key", "value", "ex", 10);
-
-      redis
-        .get("key")
-        .then((data) =>
-          setInterval(() => {
-            console.log(data);
-          }, 1000)
-        )
-        .catch((e) => console.log(e));
+      // let hrefs;
+      // const sub_anime = await axios.get(`https://animang.ru/${this.path}`);
+      // const $ = cheerio.load(sub_anime);
+      // $("div.post-home").each((i, elem) => {
+      //   const element = $(elem).children("a").attr("href");
+      //   hrefs.push(element);
+      // });
+      // redis.set("some_key", "here");
+      // setInterval(() => {
+      //   redis
+      //     .get("some_key")
+      //     .then((data) => console.log(data))
+      //     .catch((e) => console.log(e));
+      // }, 1000);
     } catch (e) {
       console.log(e);
     }
@@ -258,17 +299,17 @@ class API {
         film_annotations = film_annotations.filter((item) => item.name !== "");
       });
 
-      console.log(film_annotations);
-
-      return [
-        { free_info, art, description, user_responses, film_annotations },
-      ];
+      return {
+        free_info,
+        art,
+        description,
+        user_responses,
+        film_annotations,
+      };
     } catch (e) {
       console.log(e);
     }
   }
 }
 
-module.exports = {
-  api: new API(),
-};
+module.exports = { API, Janru, Categories, Podborki };
