@@ -3,17 +3,26 @@ version: "3.9"
 services:
   web:
     container_name: telegram-anime-bot
+    restart: always
     image: 389798/telegram-image
+    build: ./
+    env_file: .env
     depends_on:
       - redis
     volumes:
-      - $(pwd)\helpers:/app/helpers
+      - C:\Users\Игорь\Documents\anime_bot:/app/
 
   redis:
     image: redis
-    container_name: redis-container
+    container_name: svc-redis
+    ports:
+      - 6379:6379
+    command: ["redis-server", "--bind", "redis", "--port", "6379"]
     volumes:
-      - $(pwd)\db:/usr/local/etc/redis
+      - C:\Users\Игорь\Documents\anime_bot\redis:/usr/local/etc/redis
 
 networks:
-  - default
+  default:
+
+volumes:
+  redis:

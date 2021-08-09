@@ -1,6 +1,13 @@
 require("dotenv").config();
-const { API, Janru, Categories, Podborki } = require("./helpers/Helper");
 const { Telegraf } = require("telegraf");
+const {
+  API,
+  Janru,
+  Podborki,
+  Search,
+  catcher_info,
+} = require("./helpers/Helper");
+const Keyboard = require("./helpers/Keybord");
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
@@ -24,241 +31,1015 @@ const start = async () => {
     bot.command("/start", (msg) => {
       const id = msg.chat.id;
 
-      bot.telegram.sendMessage(id, "Choose the option in menu", {
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: "Все аниме", callback_data: "all_anime" }],
-            [{ text: "Категории", callback_data: "categories" }],
-            [{ text: "Жанры", callback_data: "janru" }],
-            [{ text: "Подборки", callback_data: "groups" }],
-            [{ text: "🔍 Поиск по годам", callback_data: "search_for_year" }],
-            [
-              {
-                text: "🔍 Поиск по названию",
-                callback_data: "search_for_name",
-              },
-            ],
-          ],
-        },
-      });
+      bot.telegram.sendMessage(
+        id,
+        "Choose the option in menu",
+        new Keyboard().render_main()
+      );
 
       bot.on("callback_query", async (ctx) => {
         const id = msg.chat.id;
         const text = ctx.update.callback_query.data;
-        // const data = msg.message.chat.id;
 
         switch (text) {
           case "all_anime":
-            await new API("https://animang.ru", 130).get_path_anime();
-            break;
-          case "categories":
-            const _categories = new Categories();
-
-            _categories
-              .get_categories()
+            new API("", 1)
+              .get_path_anime()
               .then((data) => {
-                for (let property of Object.values(data)) {
-                  console.log(property);
-                }
+                msg.telegram.sendMessage(
+                  id,
+                  `${data}`,
+                  new Keyboard().render_anime_buttons()
+                );
               })
               .catch((e) => console.log(e));
-
-            msg.telegram.sendMessage(id, "Categories of the anime", {
-              reply_markup: {
-                inline_keyboard: [
-                  [
-                    { text: "🆕 Новинки", callback_data: "new" },
-                    { text: "🎥 Фильмы", callback_data: "cinemas" },
-                  ],
-                  [
-                    { text: "📽 Сериалы", callback_data: "serial" },
-                    { text: "⏱ Онгоинги", callback_data: "ongoing" },
-                  ],
-                  [
-                    { text: "📺 Тв", callback_data: "tv" },
-                    { text: "🎨 Ова", callback_data: "ova" },
-                  ],
-                  [
-                    { text: "🕸 Она", callback_data: "ona" },
-                    { text: "📺 Тв-спешл", callback_data: "tv-speshl" },
-                  ],
-                  [
-                    { text: "🗽 Анонсы", callback_data: "anounce" },
-                    { text: "🔝 Топ", callback_data: "top" },
-                  ],
-                  [
-                    { text: "📜 Подборки", callback_data: "podborki" },
-                    { text: "🍀 Рандомное аниме", callback_data: "random" },
-                  ],
-                  [{ text: "🔙 Назад", callback_data: "back" }],
-                ],
-              },
-            });
             break;
           case "janru":
-            const janru = new Janru();
-
-            janru.get_janru();
-
-            msg.telegram.sendMessage(id, "Types of anime", {
-              reply_markup: {
-                inline_keyboard: [
-                  [
-                    { text: "😂 Комедии", callback_data: "comedy" },
-                    { text: "🤖 Меха", callback_data: "mexa" },
-                  ],
-                  [
-                    { text: "🕵️‍♂️ Детективы", callback_data: "detective" },
-                    { text: "🎭 Драмы", callback_data: "darama" },
-                  ],
-                  [
-                    { text: "🔮 Мистика", callback_data: "mystique" },
-                    { text: "👽 Фантастика", callback_data: "fantastic" },
-                  ],
-                  [
-                    { text: "👹 Фэнтези", callback_data: "fentesi" },
-                    { text: "(⓿_⓿) Пародия", callback_data: "parody" },
-                  ],
-                  [
-                    { text: "🌹 Романтика", callback_data: "romantique" },
-                    { text: "🎞 Триллеры", callback_data: "triller" },
-                  ],
-                  [
-                    { text: "🎸 Музыка", callback_data: "music" },
-                    { text: "☀ Повседневность", callback_data: "everyday" },
-                  ],
-                  [
-                    { text: "👻 Ужасы", callback_data: "uzhasy" },
-                    {
-                      text: "🗡 Боевые искусства",
-                      callback_data: "war_isvustvo",
-                    },
-                  ],
-                  [
-                    { text: "🤾‍♂️ Спорт", callback_data: "sport" },
-                    { text: "🧕 Исторические", callback_data: "history" },
-                  ],
-                  [
-                    { text: "💏 Этти", callback_data: "etti" },
-                    { text: "🏹 Приключения", callback_data: "adventure" },
-                  ],
-                  [
-                    { text: "🎎 Сёдзё", callback_data: "sedze" },
-                    { text: "🎴 Сёнен", callback_data: "senen" },
-                  ],
-                  [{ text: "🔙 Назад", callback_data: "back" }],
-                ],
-              },
-            });
+            msg.telegram.sendMessage(
+              id,
+              "Types of anime",
+              new Keyboard().render_janru()
+            );
             break;
           case "groups":
-            const mix_groups = new Podborki();
-
-            mix_groups.get_mix_groups();
-
-            bot.telegram.sendMessage(id, "Change some group of anime", {
-              reply_markup: {
-                inline_keyboard: [
-                  [
-                    {
-                      text: "🎉 Самые популярные аниме",
-                      callback_data: "the_most_popular",
-                    },
-                  ],
-                  [
-                    {
-                      text: "⏳ О путешествиях во времени",
-                      callback_data: "time_adventure",
-                    },
-                  ],
-                  [
-                    {
-                      text: "🎦 Лучшие полнометражные аниме",
-                      callback_data: "best_cinema",
-                    },
-                  ],
-                  [
-                    {
-                      text: "🎌 Аниме с японской мифологии",
-                      callback_data: "japan_mifology",
-                    },
-                  ],
-                  [{ text: "🤏 Мини-аниме", callback_data: "mini_anime" }],
-                  [
-                    {
-                      text: "🌌 Аниме про космос",
-                      callback_data: "about_space",
-                    },
-                  ],
-                  [{ text: "U+1F1E8 Китайское аниме", callback_data: "china" }],
-                  [
-                    {
-                      text: "⚛ Аниме про акалипсис",
-                      callback_data: "apocalypsis",
-                    },
-                  ],
-                  [{ text: "🧝‍♂️🧝‍♀️ Аниме с эльфами", callback_data: "elfs" }],
-                  [
-                    {
-                      text: "🎮 Лучшие аниме по играм",
-                      callback_data: "about_games",
-                    },
-                  ],
-                  [
-                    {
-                      text: "👸 Лучшие фентези-аниме",
-                      callback_data: "best_fantasy",
-                    },
-                  ],
-                  [
-                    {
-                      text: "😹 Лучшие комедийные аниме",
-                      callback_data: "best_comedy",
-                    },
-                  ],
-                  [{ text: "🧝‍♂️ Аниме про магию", callback_data: "magic" }],
-                  [{ text: "🏫 Аниме про школу", callback_data: "school" }],
-                  [
-                    {
-                      text: "💖 Лучшие аниме о любьви",
-                      callback_data: "best_love",
-                    },
-                  ],
-                  [
-                    {
-                      text: "🧛‍♂️ Аниме про вампиров",
-                      callback_data: "wampires",
-                    },
-                  ],
-                  [
-                    {
-                      text: "🔝 Топ аниме 2019 года",
-                      callback_data: "top_2019",
-                    },
-                  ],
-                  [{ text: "👾 Аниме с монстрами", callback_data: "monsters" }],
-                  [
-                    {
-                      text: "😋 Самые кавайные аниме",
-                      callback_data: "the_most_kavainy",
-                    },
-                  ],
-                  [
-                    {
-                      text: "🔝 Лучшие аниме 2018 года",
-                      callback_data: "best_2018",
-                    },
-                  ],
-                  [{ text: "🔙 Назад", callback_data: "back" }],
-                ],
-              },
-            });
+            bot.telegram.sendMessage(
+              id,
+              "Change some group of anime",
+              new Keyboard().render_mix_group()
+            );
             break;
           case "search_for_year":
-            msg.telegram.sendMessage(id, "Search for year (from 1997 y.)");
+            msg.telegram.sendMessage(
+              id,
+              "Search for year (from 1997 year and later)",
+              new Keyboard().render_back_button()
+            );
+
+            bot.on("message", (year_ctx) => {
+              new API(`god/${year_ctx.message.text}`, 1)
+                .get_path_anime()
+                .then((data) => {
+                  msg.telegram.sendMessage(
+                    id,
+                    `
+                    (${data.free_info.name.Russian}/${data.free_info.name.Original})  
+                    ${data.art}
+                    `,
+                    new Keyboard().render_anime_buttons()
+                  );
+                })
+                .catch((e) => console.log(e));
+            });
             break;
           case "search_for_name":
-            msg.telegram.sendMessage(id, "Search for name");
+            msg.telegram.sendMessage(
+              id,
+              "Search for name, example: Violet Evergarden",
+              new Keyboard().render_back_button()
+            );
+
+            bot.on("message", (name_ctx) => {
+              new Search(`${name_ctx.message.text}`)
+                .search_data()
+                .then((data) => {
+                  msg.telegram.sendMessage(
+                    id,
+                    `
+                    (${data.free_info.name.Russian}/${data.free_info.name?.Original})
+                    ${data.art}
+                    `,
+                    new Keyboard().render_anime_buttons()
+                  );
+
+                  catcher_info(data.free_info.name.Russian);
+                })
+                .catch((e) => console.log(e));
+            });
+            break;
+          case "current_information":
+            new API("novinki", 1)
+              .get_path_anime()
+              .then((data) => {
+                const current_information = `
+                  ${Object.entries(data.free_info)[1]}\n
+                  ${Object.entries(data.free_info)[2]}\n
+                  ${Object.entries(data.free_info)[3]}\n
+                  ${Object.entries(data.free_info)[4]}\n
+                  ${Object.entries(data.free_info)[5]}\n
+                  ${Object.entries(data.free_info)[6]}\n
+                  ${Object.entries(data.free_info)[7]}\n
+                  ${Object.entries(data.free_info)[8]}\n
+                  ${Object.entries(data.free_info)[9]}\n
+                `;
+
+                msg.telegram.sendMessage(
+                  id,
+                  current_information,
+                  new Keyboard().render_back_button()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "description":
+            new API("novinki", 1)
+              .get_path_anime()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `${data.description}`,
+                  new Keyboard().render_back_button()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "responses":
+            new API("novinki", 1)
+              .get_path_anime()
+              .then((data) => {
+                // msg.telegram.sendMessage(
+                //   id,
+                //   JSON.stringify(data.user_responses),
+                //   new Keyboard().render_back_button()
+                // );
+
+                data.user_responses.forEach((item) => {
+                  msg.telegram.sendMessage(
+                    id,
+                    `${item.user}(${item.date}): ${item.content}`,
+                    new Keyboard().render_back_button()
+                  );
+                });
+              })
+              .catch((e) => console.log(e));
+            break;
+          //category
+          case "annotations":
+            new API("novinki", 1)
+              .get_path_anime()
+              .then((data) => {
+                const { film_annotations } = data;
+
+                film_annotations.forEach((item) => {
+                  msg.telegram.sendMessage(
+                    id,
+                    `
+                    ${item.name}
+                    ${item.href}
+                    `,
+                    new Keyboard().render_back_button()
+                  );
+                });
+                // msg.telegram.sendMessage(
+                //   id,
+                //   `${data.film_annotations}`,
+                //   new Keyboard().render_back_button()
+                // );
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "new":
+            new API("novinki", 1)
+              .get_path_anime()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                    Тип - ${text}
+                    ${data.free_info.name.Russian}, 
+                    ${data.art}
+                  `
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "cinemas":
+            new API("filmy", 1)
+              .get_path_anime()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                    Тип - ${text}
+                  ${data.free_info.name.Russian}
+                  ${data.art}
+                  `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "serial":
+            new API("serialy", 1)
+              .get_path_anime()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                   Тип - ${text}
+                   ${data.free_info.name.Russian} 
+                   ${data.art}
+                  `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "ongoing":
+            new API("ongoingi", 1)
+              .get_path_anime()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                   Тип - ${text}
+                  ${data.free_info.name.Russian}
+                  ${data.art}
+                  `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "tv":
+            new API("tip/tv", 1)
+              .get_path_anime()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                   Тип - ${text}
+                   ${data.free_info.name.Russian}
+                   ${data.art}
+                  `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "ova":
+            new API("tip/ova", 1)
+              .get_path_anime()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                   Тип - ${text}
+                   ${data.free_info.name.Russian}
+                   ${data.art}
+                  `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "ona":
+            new API("tip/ona", 1)
+              .get_path_anime()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                  Тип - ${text}
+                  ${data.free_info.name.Russian} 
+                  ${data.art}
+                  `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "tv-speshl":
+            new API("tip/tv-speshl", 1)
+              .get_path_anime()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                  Тип - ${text}
+                  ${data.free_info.name.Russian}
+                  ${data.art}
+                  `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "anounce":
+            new API("anons", 1)
+              .get_path_anime()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                  Тип - ${text}
+                  ${data.free_info.name.Russian}
+                  ${data.art}
+                  `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "top":
+            new API("top", 1)
+              .get_path_anime()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                  Тип - ${text}
+                  ${data.free_info.name.Russian}
+                  ${data.art}
+                  `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "podborki":
+            new API("podborki", 1)
+              .get_page()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                   Тип - ${text}
+                   ${data.free_info.name.Russian} 
+                   ${data.art}
+                  `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "random":
+            new API("random", 1)
+              .get_page()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                  Тип - ${text}
+                  ${data.free_info.name.Russian}
+                  `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+          //category
+
+          //janru - сделать функцию для оптимизации
+          case "komediya":
+            new Janru("genre/komediya")
+              .get_janru()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                   Тип - ${text} 
+                   ${data.free_info.name.Russian}
+                   ${data.art}
+                  `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "mexa":
+            new Janru("genre/mexa")
+              .get_janru()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                   Тип - ${text}
+                   ${data.free_info.name.Russian}
+                   ${data.art}
+                  `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "detektiv":
+            new Janru("genre/detektiv")
+              .get_janru()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                  Тип -  ${text}
+                   ${data.free_info.name.Russian}
+                   ${data.art}
+                  `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "drama":
+            new Janru("genre/drama")
+              .get_janru()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                  Тип -  ${text}
+                   ${data.free_info.name.Russian}
+                   ${data.art}
+                  `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "mistika":
+            new Janru("genre/mistika")
+              .get_janru()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                  Тип -  ${text}
+                  ${data.free_info.name.Russian}
+                  ${data.art}
+                `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "fantastika":
+            new Janru("genre/fantastika")
+              .get_janru()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                   Тип - ${text}
+                   ${data.free_info.name.Russian}
+                   ${data.art}
+                  `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "fentezi":
+            new Janru("genre/fentezi")
+              .get_janru()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                  Тип - ${text}
+                 ${data.free_info.name.Russian}
+                 ${data.art}
+                `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "parodiya":
+            new Janru("genre/parodiya")
+              .get_janru()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                  Тип - ${text}
+                 ${data.free_info.name.Russian}
+                 ${data.art}
+                `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "romantika":
+            new Janru("genre/romantika")
+              .get_janru()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                  Тип - ${text}
+                 ${data.free_info.name.Russian}
+                 ${data.art}
+                `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "triller":
+            new Janru("genre/triller")
+              .get_janru()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                  Тип - ${text}
+                 ${data.free_info.name.Russian}
+                 ${data.art}
+                `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "muzyka":
+            new Janru("genre/muzyka")
+              .get_janru()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                   Тип - ${text}
+                   ${data.free_info.name.Russian}
+                   ${data.art}
+                  `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "povsednevnost":
+            new Janru("genre/povsednevnost")
+              .get_janru()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                   Тип - ${text}
+                   ${data.free_info.name.Russian}
+                   ${data.art}
+                  `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "uzhasy":
+            new Janru("genre/uzhasy")
+              .get_janru()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                   Тип - ${text}
+                   ${data.free_info.name.Russian}
+                   ${data.art}
+                  `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "boevye-iskusstva":
+            new Janru("genre/boevye-iskusstva")
+              .get_janru()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                   Тип - ${text}
+                   ${data.free_info.name.Russian}
+                   ${data.art}
+                  `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "sport":
+            new Janru("genre/sport")
+              .get_janru()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                   Тип - ${text}
+                 ${data.free_info.name.Russian}
+                 ${data.art}
+                `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "istoricheskij":
+            new Janru("genre/istoricheskij")
+              .get_janru()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                   Тип - ${text}
+                 ${data.free_info.name.Russian}
+                 ${data.art}
+                `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+
+          case "etti":
+            new Janru("genre/etti")
+              .get_janru()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                   Тип - ${text}
+                 ${data.free_info.name.Russian}
+                 ${data.art}
+                `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "priklyuchenia":
+            new Janru("genre/priklyucheniya")
+              .get_janru()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                   Тип - ${text}
+                 ${data.free_info.name.Russian}
+                 ${data.art}
+                `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "syodzyo":
+            new Janru("genre/syodzyo")
+              .get_janru()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                   Тип - ${text}
+                 ${data.free_info.name.Russian}
+                 ${data.art}
+                `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+          case "syonen":
+            new Janru("genre/syonen")
+              .get_janru()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                   Тип - ${text}
+                 ${data.free_info.name.Russian}
+                 ${data.art}
+                `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+
+          //mix block
+          case "/populyarnye":
+            new Podborki("populyarnye")
+              .get_mix_groups()
+              .then((data) => {
+                //   msg.telegram.sendMessage(
+                //     id,
+                //     `
+                //     Тип - ${text}
+                //  ${data.free_info.name.Russian}
+                //  ${data.art}
+                // `,
+                //     new Keyboard().render_anime_buttons()
+                //   );
+                console.log(data);
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "/razdel/anime-o-puteshestviyax-vo-vremeni":
+            new Podborki("razdel/anime-o-puteshestviyax-vo-vremeni")
+              .get_mix_groups()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                  Тип - ${text}
+               ${data.free_info.name.Russian}
+               ${data.art}
+              `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "/razdel/luchshie-polnometrazhnye-anime":
+            new Podborki("razdel/luchshie-polnometrazhnye-anime")
+              .get_mix_groups()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                   Тип - ${text}
+             ${data.free_info.name.Russian}
+             ${data.art}
+            `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "/razdel/anime-s-yaponskoj-mifologiej":
+            new Podborki("razdel/anime-s-yaponskoj-mifologiej")
+              .get_mix_groups()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                   Тип - ${text}
+             ${data.free_info.name.Russian}
+             ${data.art}
+            `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "/razdel/mini-anime":
+            new Podborki("razdel/mini-anime")
+              .get_mix_groups()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                   Тип - ${text}
+                   ${data.free_info.name.Russian}
+                   ${data.art}
+                  `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "/razdel/anime-pro-kosmos":
+            new Podborki("razdel/anime-pro-kosmos")
+              .get_mix_groups()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                   Тип - ${text}
+                   ${data.free_info.name.Russian}
+                   ${data.art}
+                  `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "/razdel/kitajskoe-anime":
+            new Podborki("razdel/kitajskoe-anime")
+              .get_mix_groups()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                   Тип - ${text}
+                   ${data.free_info.name.Russian}
+                   ${data.art}
+                  `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "/razdel/anime-apokalipsis":
+            new Podborki("razdel/anime-apokalipsis")
+              .get_mix_groups()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                  Тип - ${text}
+             ${data.free_info.name.Russian}
+             ${data.art}
+            `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "/razdel/anime-s-elfami":
+            new Podborki("razdel/anime-s-elfami")
+              .get_mix_groups()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                  Тип - ${text}
+             ${data.free_info.name.Russian}
+             ${data.art}
+            `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "/razdel/luchshie-anime-po-igram":
+            new Podborki("razdel/luchshie-anime-po-igram")
+              .get_mix_groups()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                  Тип - ${text}
+             ${data.free_info.name.Russian}
+             ${data.art}
+            `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "/razdel/luchshie-fentezi-anime":
+            new Podborki("razdel/luchshie-fentezi-anime")
+              .get_mix_groups()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                  Тип - ${text}
+             ${data.free_info.name.Russian}
+             ${data.art}
+            `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "/razdel/luchshie-komedijnye-anime":
+            new Podborki("razdel/luchshie-komedijnye-anime")
+              .get_mix_groups()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                  Тип - ${text}
+             ${data.free_info.name.Russian}
+             ${data.art}
+            `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "/razdel/anime-pro-magiyu":
+            new Podborki("razdel/anime-pro-magiyu")
+              .get_mix_groups()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                  Тип - ${text}
+             ${data.free_info.name.Russian}
+             ${data.art}
+            `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "/genre/shkola":
+            new Podborki("genre/shkola")
+              .get_mix_groups()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                  Тип - ${text}
+             ${data.free_info.name.Russian}
+             ${data.art}
+            `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "/razdel/anime-pro-lyubov":
+            new Podborki("razdel/anime-pro-lyubov")
+              .get_mix_groups()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                  Тип - ${text}
+             ${data.free_info.name.Russian}
+             ${data.art}
+            `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "/razdel/anime-pro-vampirov":
+            new Podborki("razdel/anime-pro-vampirov")
+              .get_mix_groups()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                  Тип - ${text}
+             ${data.free_info.name.Russian}
+             ${data.art}
+            `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+
+          case "/razdel/top-anime-2019-goda":
+            new Podborki("razdel/top-anime-2019-goda")
+              .get_mix_groups()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                   Тип - ${text}
+             ${data.free_info.name.Russian}
+             ${data.art}
+            `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "/razdel/anime-s-monstrami":
+            new Podborki("razdel/anime-s-monstrami")
+              .get_mix_groups()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                   Тип - ${text}
+             ${data.free_info.name.Russian}
+             ${data.art}
+            `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "/razdel/samye-kavajnye-anime":
+            new Podborki("razdel/samye-kavajnye-anime")
+              .get_mix_groups()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                  Тип - ${text}
+             ${data.free_info.name.Russian}
+             ${data.art}
+            `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "/razdel/luchshie-anime-2018":
+            new Podborki("razdel/luchshie-anime-2018")
+              .get_mix_groups()
+              .then((data) => {
+                msg.telegram.sendMessage(
+                  id,
+                  `
+                  Тип - ${text}
+             ${data.free_info.name.Russian}
+             ${data.art}
+            `,
+                  new Keyboard().render_anime_buttons()
+                );
+              })
+              .catch((e) => console.log(e));
+            break;
+          case "back":
+            try {
+              ctx.deleteMessage();
+            } catch (e) {
+              console.log(e);
+            }
             break;
         }
       });
@@ -272,7 +1053,9 @@ const start = async () => {
     });
 
     bot.command("/clear_all", (msg) => {
-      msg.telegram.deleteMessage(msg.chat.id, msg.message.message_id - 1); //Fix later
+      for (let i = 0; i < msg.message.message_id; i++) {
+        msg.deleteMessage(i + 1);
+      } //Fix later
     });
 
     bot.command("/subscribe", (msg) => {
@@ -293,3 +1076,5 @@ const start = async () => {
 };
 
 start();
+
+module.exports = bot;

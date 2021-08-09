@@ -1,26 +1,37 @@
-module.exports = class Choose {
-  constructor(arr) {
-    this.arr = arr;
-  }
+const bot = require("../main");
+const Keyboard = require("./Keybord");
 
-  get_category() {
-    for (let keyabords of this.arr) {
-      console.log(obj);
+//Сделать рефакторинг для категорий, жанров и тд..
+function choose(id, cls, link, method) {
+  // for (let i = 0; i < payload.length; i++) {
+  //   switch (payload[i]) {
+  //     case choose:
+  //       fun();
+  //       break;
+  //   }
+  // }
+  // bot.on("callback_query", (ctx) => {
+  //const id = ctx.chat.id;
 
-      switch (keyabords) {
-        case this.arr[0]:
-          break;
-        case this.arr[1]:
-          break;
-        case this.arr[2]:
-          break;
-        case this.arr[3]:
-          break;
-        case this.arr[4]:
-          break;
-        case this.arr[5]:
-          break;
-      }
-    }
-  }
-};
+  // switch (_) {
+  //   case "/razdel/mini-anime":
+  new cls(link)
+    .get_page()
+    .then((data) => {
+      msg.telegram.sendMessage(
+        id,
+        `
+         ${data.free_info.name.Russian}
+         ${data.art}
+        `,
+        new Keyboard().render_anime_buttons()
+      );
+      console.log(data);
+    })
+    .catch((e) => console.log(e));
+  // break;
+}
+// });
+//}
+
+choose();
