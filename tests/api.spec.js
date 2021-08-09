@@ -132,13 +132,5 @@ describe("Telegram bot testing", () => {
         console.log(e);
       }
     });
-
-    //still now
-    // xit("first page of 'cinemas' category should returned some values/Categories class testing", async () => {
-    //   await new Categories("cinemas")
-    //     .get_categories()
-    //     .then((payload) => console.log(payload))
-    //     .catch((e) => console.log(e));
-    // });
   });
 });
